@@ -123,6 +123,56 @@ fn listing_1_8(input: i32) {
     }
 }
 
+// Lifetimes can have holes
+fn listing_1_9() {
+    let mut x = Box::new(42);
+    let mut z = &x; // 'a
+    for i in 0..3 {
+        println!("in loop {}", z); // 'a
+        x = Box::new(i);
+
+        // Compile error!
+        // eprintln!(" = {:?}", z);
+
+        z = &x; // 'a
+    }
+    println!("{}", z); // 'a
+}
+
+// A type that needs to be generic over multiple lifetimes
+fn listing_1_10() {
+    struct StrSplit<'s, 'p> {
+        delimiter: &'p str,
+        document: &'s str,
+    }
+
+    impl<'s, 'p> Iterator for StrSplit<'s, 'p> {
+        type Item = &'s str;
+        fn next(&mut self) -> Option<Self::Item> {
+            let sep_pos = self.document.find(&self.delimiter);
+            Option::Some(&self.document[0..sep_pos.unwrap()])
+        }
+    }
+
+    fn str_before(s: &str, c: char) -> Option<&str> {
+        StrSplit { document: s, delimiter: &c.to_string() }.next()
+    }
+
+    let first = str_before("first,second", ',');
+    eprintln!("first = {:?}", first);
+}
+
+//  A type that needs to be generic over multiple lifetimes 2
+fn listing_1_11() {
+    struct MutStr<'a, 'b> {
+        s: &'a mut &'b str
+    }
+    let mut s = "hello";
+    *MutStr { s: &mut s }.s = "world";
+    println!("{}", s);
+}
+
+
 fn main() {
     println!("Hello, world!");
     listing_1_1();
@@ -133,4 +183,7 @@ fn main() {
     listing_1_6();
     listing_1_7();
     listing_1_8(1);
+    listing_1_9();
+    listing_1_10();
+    listing_1_11();
 }
